@@ -20,17 +20,17 @@ import java.time.LocalDateTime;
 public abstract class AuditingField {
 
     @CreatedDate
-    @Column(nullable = false, updatable = false, columnDefinition = "DATETIME")
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "DATETIME")
     private LocalDateTime createdAt;
     @CreatedBy
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_by", nullable = false, updatable = false)
     private String createdBy;
 
 
     @LastModifiedDate
-    @Column(nullable = false, columnDefinition = "DATETIME")
+    @Column(name = "modified_at", nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime modifiedAt;
     @LastModifiedBy
-    @Column(nullable = false)
+    @Column(name = "modified_by", nullable = false)
     private String modifiedBy;
 }

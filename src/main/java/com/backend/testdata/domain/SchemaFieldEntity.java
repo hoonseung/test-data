@@ -15,7 +15,7 @@ import java.util.Objects;
 @ToString(callSuper = true)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "\"schema_field\"}")
+@Table(name = "\"schema_field\"")
 @Entity
 public class SchemaFieldEntity extends AuditingField {
 
@@ -29,6 +29,7 @@ public class SchemaFieldEntity extends AuditingField {
 
     @Column(name = "field_name", nullable = false)
     private String fieldName;
+    @Enumerated(EnumType.STRING)
     @Column(name = "mock_data_type", nullable = false)
     private MockDataType mockDataType;
     @Column(name = "field_order", nullable = false)

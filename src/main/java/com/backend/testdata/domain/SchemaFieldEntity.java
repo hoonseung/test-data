@@ -1,5 +1,6 @@
 package com.backend.testdata.domain;
 
+import com.backend.testdata.domain.constants.MockDataType;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -10,7 +11,7 @@ public class SchemaFieldEntity {
 
     private String fieldName;
 
-    private String mockDataType;
+    private MockDataType mockDataType;
 
     private Integer fieldOrder;
 

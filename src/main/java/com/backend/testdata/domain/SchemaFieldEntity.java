@@ -73,8 +73,7 @@ public class SchemaFieldEntity extends AuditingField {
         if (this == o) return true;
         if (!(o instanceof SchemaFieldEntity that)) return false;
         if (this.getId() == null || that.getId() == null) {
-            return Objects.equals(this.getTableSchema(), that.getTableSchema())
-                    && Objects.equals(this.getFieldName(), that.getFieldName())
+            return Objects.equals(this.getFieldName(), that.getFieldName())
                     && Objects.equals(this.getMockDataType(), that.getMockDataType())
                     && Objects.equals(this.getFieldOrder(), that.getFieldOrder())
                     && Objects.equals(this.getBlankPercent(), that.getBlankPercent())
@@ -86,7 +85,7 @@ public class SchemaFieldEntity extends AuditingField {
 
     @Override
     public int hashCode() {
-        return this.getId() == null ? Objects.hash(getTableSchema(), getFieldName(), getMockDataType(), getFieldOrder(), getBlankPercent(), getTypeOptionJson(), getForceValue())
+        return this.getId() == null ? Objects.hash(getFieldName(), getMockDataType(), getFieldOrder(), getBlankPercent(), getTypeOptionJson(), getForceValue())
                 : Objects.hash(getId());
     }
 }

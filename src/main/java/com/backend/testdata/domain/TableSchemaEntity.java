@@ -95,4 +95,6 @@ public class TableSchemaEntity extends AuditingField {
         return this.getId() == null ? Objects.hash(getSchemaName(), getUserId(), getExportedAt(), getSchemaFields())
                 : Objects.hash(getId());
     }
+
+
 }

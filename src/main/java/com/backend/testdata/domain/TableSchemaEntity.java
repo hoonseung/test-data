@@ -2,10 +2,8 @@ package com.backend.testdata.domain;
 
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -22,7 +20,13 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(exclude = "schemaFields", callSuper = true)
 @Getter
-@Table(name = "\"table_schema\"")
+@Table(name = "\"table_schema\"", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "schema_name"})
+},
+        indexes = {
+                @Index(columnList = "created_at"),
+                @Index(columnList = "modified_at")
+})
 @Entity
 public class TableSchemaEntity extends AuditingField {
 
@@ -30,6 +34,7 @@ public class TableSchemaEntity extends AuditingField {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(name = "schema_name", nullable = false)
     private String schemaName;
     @Column(name = "user_id", nullable = false)
@@ -38,6 +43,7 @@ public class TableSchemaEntity extends AuditingField {
     @Column(name = "exported_at")
     private LocalDateTime exportedAt;
 
+    @OrderBy("fieldOrder asc")
     @OneToMany(mappedBy = "tableSchema", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<SchemaFieldEntity> schemaFields = new LinkedHashSet<>();
 

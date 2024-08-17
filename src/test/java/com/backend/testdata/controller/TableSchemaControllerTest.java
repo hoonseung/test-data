@@ -1,7 +1,10 @@
 package com.backend.testdata.controller;
 
 import com.backend.testdata.configuration.SecurityConfiguration;
-import org.junit.jupiter.api.Disabled;
+import com.backend.testdata.domain.constants.MockDataType;
+import com.backend.testdata.util.FormDataEncoder;
+import com.backend.testdata.util.SchemaFieldRequestWithMock;
+import com.backend.testdata.util.TableSchemaRequestWithMock;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,18 +15,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("해당 테스트는 #24 이슈에서 진행되었음, 구현은 진행하지않고 테스트로 기초 스펙만 정의함")
+//@Disabled("해당 테스트는 #24 이슈에서 진행되었음, 구현은 진행하지않고 테스트로 기초 스펙만 정의함")
 @DisplayName("[Controller] 테이블 스키마")
-@Import(SecurityConfiguration.class)
+@Import({SecurityConfiguration.class, FormDataEncoder.class})
 @AutoConfigureMockMvc
 @WebMvcTest
 record TableSchemaControllerTest(
-        @Autowired MockMvc mvc
+        @Autowired MockMvc mvc,
+        @Autowired FormDataEncoder encoder
 ) {
 
     @DisplayName("[GET] 테이블 스키마 페이지를 요청하면 테이블 스키마 뷰 (정상) 를 반환한다.")
@@ -43,10 +49,18 @@ record TableSchemaControllerTest(
     @Test
     void whenCreatedOrUpdatedTableSchema_ThenRedirectionToTableSchemaPage() throws Exception {
         //given
+        var request = TableSchemaRequestWithMock.create("test_schema", "홍길동",
+                List.of(
+                        SchemaFieldRequestWithMock.create("id", MockDataType.ROW_NUMBER, 1, 0, null, null),
+                        SchemaFieldRequestWithMock.create("name", MockDataType.NAME, 2, 0, null, null),
+                        SchemaFieldRequestWithMock.create("age", MockDataType.NUMBER, 3, 0, null, null)
+                ));
+
+
 
         //when & then
         mvc.perform(post("/table-schema")
-                        .queryParam("data", "sample") //TODO 수정 필요
+                        .content(encoder.encode(request))
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())

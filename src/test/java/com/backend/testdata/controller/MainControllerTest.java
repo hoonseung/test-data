@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("[Controller] 메인")
 @Import(SecurityConfiguration.class)
 @AutoConfigureMockMvc
-@WebMvcTest(MainControllerTest.class)
+@WebMvcTest
 record MainControllerTest(
         @Autowired MockMvc mvc
 ) {
@@ -29,8 +29,7 @@ record MainControllerTest(
 
         //when & then
         mvc.perform(get("/"))
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(view().name("index"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/table-schema"));
     }
 }

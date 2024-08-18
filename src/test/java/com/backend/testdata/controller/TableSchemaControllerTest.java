@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-//@Disabled("해당 테스트는 #24 이슈에서 진행되었음, 구현은 진행하지않고 테스트로 기초 스펙만 정의함")
 @DisplayName("[Controller] 테이블 스키마")
 @Import({SecurityConfiguration.class, FormDataEncoder.class})
 @AutoConfigureMockMvc
@@ -57,13 +56,13 @@ record TableSchemaControllerTest(
                 ));
 
 
-
         //when & then
         mvc.perform(post("/table-schema")
                         .content(encoder.encode(request))
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attributeExists("tableSchemaRequest"))
                 .andExpect(redirectedUrl("/table-schema"));
     }
 
@@ -77,7 +76,7 @@ record TableSchemaControllerTest(
         mvc.perform(get("/table-schema/my-schemas"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(status().isOk())
-                .andExpect(view().name("my-schema"));
+                .andExpect(view().name("my-schemas"));
     }
 
 
@@ -87,7 +86,8 @@ record TableSchemaControllerTest(
         //given
         String schemaName = "schemaName";
         //when & then
-        mvc.perform(get("/table-schema/my-schemas/{schemaName}", schemaName))
+        mvc.perform(post("/table-schema/my-schemas/{schemaName}", schemaName)
+                        .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/table-schema/my-schemas"));
     }

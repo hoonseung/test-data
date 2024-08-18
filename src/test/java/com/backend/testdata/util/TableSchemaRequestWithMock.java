@@ -8,7 +8,7 @@ import java.util.List;
 public class TableSchemaRequestWithMock {
 
     public static TableSchemaRequest create(String schemaName, String userId, List<SchemaFieldRequest> schemaFields) {
-        return new TableSchemaRequest(
+        return TableSchemaRequest.of(
                 schemaName,
                 userId,
                 schemaFields

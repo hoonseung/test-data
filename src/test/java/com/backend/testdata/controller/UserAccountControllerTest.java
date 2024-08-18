@@ -1,7 +1,6 @@
 package com.backend.testdata.controller;
 
 import com.backend.testdata.configuration.SecurityConfiguration;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Disabled("해당 테스트는 #24 이슈에서 진행되었음, 구현은 진행하지않고 테스트로 기초 스펙만 정의함")
 @DisplayName("[Controller] 회원")
 @Import(SecurityConfiguration.class)
 @AutoConfigureMockMvc

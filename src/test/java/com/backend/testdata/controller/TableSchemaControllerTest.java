@@ -1,5 +1,6 @@
 package com.backend.testdata.controller;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,6 +56,22 @@ record TableSchemaControllerTest(
         .andExpect(view().name("table-schema"));
   }
 
+  @DisplayName("[GET] 인증 사용자 스키마 테이블 목록에서 스키마 이름을 누르면 테이블 스키마 뷰 (정상) 를 반환한다.")
+  @Test
+  void givenParam_whenEnteredTableSchemaPage_ThenShowTableSchemaView() throws Exception {
+    //given
+    var schemaName = "test_schema";
+    //when & then
+    mvc.perform(get("/table-schema").queryParam("schemaName", schemaName))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeExists("tableSchema"))
+        .andExpect(model().attributeExists("mockDataTypes"))
+        .andExpect(model().attributeExists("fileTypes"))
+        .andExpect(view().name("table-schema"))
+        .andExpect(content().string(containsString(schemaName))); // html 내 포함 여부
+  }
+
 
   @DisplayName("[POST] 테이블 스키마 생성, 변경을 요청하면 정상적으로 수행 후 테이블 스키마 페이지로 리다이렉션한다.")
   @Test
@@ -87,6 +104,7 @@ record TableSchemaControllerTest(
     mvc.perform(get("/table-schema/my-schemas"))
         .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
         .andExpect(status().isOk())
+        .andExpect(model().attributeExists("tableSchemas"))
         .andExpect(view().name("my-schemas"));
   }
 

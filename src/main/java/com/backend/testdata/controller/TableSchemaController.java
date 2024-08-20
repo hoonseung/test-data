@@ -92,7 +92,7 @@ public class TableSchemaController {
 
 
   private TableSchemaResponse defaultTableSchema(String schemaName) {
-    return new TableSchemaResponse(!schemaName.isBlank() ? schemaName : "schema_name", "shlee",
+    return new TableSchemaResponse(schemaName != null ? schemaName : "schema_name", "shlee",
         List.of(new SchemaFieldResponse("id", MockDataType.STRING, 1, 0, null, null),
             new SchemaFieldResponse("order", MockDataType.NUMBER, 2, 0, null, null),
             new SchemaFieldResponse("name", MockDataType.NAME, 3, 0, null, null)));

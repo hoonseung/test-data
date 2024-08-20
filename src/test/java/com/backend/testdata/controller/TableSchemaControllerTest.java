@@ -2,6 +2,7 @@ package com.backend.testdata.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -9,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -16,6 +18,7 @@ import com.backend.testdata.configuration.SecurityConfiguration;
 import com.backend.testdata.domain.constants.ExportFileType;
 import com.backend.testdata.domain.constants.MockDataType;
 import com.backend.testdata.dto.request.TableSchemaExportRequest;
+import com.backend.testdata.dto.security.GithubUser;
 import com.backend.testdata.util.FormDataEncoder;
 import com.backend.testdata.util.SchemaFieldRequestWithMock;
 import com.backend.testdata.util.TableSchemaRequestWithMock;
@@ -60,9 +63,11 @@ record TableSchemaControllerTest(
   @Test
   void givenParam_whenEnteredTableSchemaPage_ThenShowTableSchemaView() throws Exception {
     //given
+    var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
     var schemaName = "test_schema";
     //when & then
-    mvc.perform(get("/table-schema").queryParam("schemaName", schemaName))
+    mvc.perform(get("/table-schema").queryParam("schemaName", schemaName)
+            .with(oauth2Login().oauth2User(githubUser)))
         .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
         .andExpect(status().isOk())
         .andExpect(model().attributeExists("tableSchema"))
@@ -77,6 +82,7 @@ record TableSchemaControllerTest(
   @Test
   void whenCreatedOrUpdatedTableSchema_ThenRedirectionToTableSchemaPage() throws Exception {
     //given
+    var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
     var request = TableSchemaRequestWithMock.create("test_schema", "홍길동",
         List.of(
             SchemaFieldRequestWithMock.create("id", MockDataType.ROW_NUMBER, 1, 0, null, null),
@@ -88,7 +94,7 @@ record TableSchemaControllerTest(
     mvc.perform(post("/table-schema")
             .content(encoder.encode(request))
             .contentType(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-            .with(csrf()))
+            .with(csrf()).with(oauth2Login().oauth2User(githubUser)))
         .andExpect(status().is3xxRedirection())
         .andExpect(flash().attributeExists("tableSchemaRequest"))
         .andExpect(redirectedUrl("/table-schema"));
@@ -99,9 +105,10 @@ record TableSchemaControllerTest(
   @Test
   void whenAuthUserEnteredAllTableSchemaPage_ThenShowAllTableSchemaView() throws Exception {
     //given
-
+    var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
     //when & then
-    mvc.perform(get("/table-schema/my-schemas"))
+    mvc.perform(get("/table-schema/my-schemas")
+            .with(oauth2Login().oauth2User(githubUser)))
         .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
         .andExpect(status().isOk())
         .andExpect(model().attributeExists("tableSchemas"))
@@ -109,14 +116,26 @@ record TableSchemaControllerTest(
   }
 
 
+  @DisplayName("[GET] 비로그인 사용자 스키마 테이블 목록에서 스키마 이름을 누르면 인증 페이지로 리다이렉션한다.")
+  @Test
+  void whenUnauthenticatedUserEnteredTableSchemaPage_ThenRedirectionToLoginPage() throws Exception {
+    //given
+    //when & then
+    mvc.perform(get("/table-schema/my-schemas"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrlPattern("**/oauth2/authorization/github"));
+  }
+
+
   @DisplayName("[POST] 회원 스키마 삭제 (정상)")
   @Test
   void whenAuthUserDeleted_ThenRedirectionToUserTableSchemaView() throws Exception {
     //given
+    var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
     String schemaName = "schemaName";
     //when & then
     mvc.perform(post("/table-schema/my-schemas/{schemaName}", schemaName)
-            .with(csrf()))
+            .with(csrf()).with(oauth2Login().oauth2User(githubUser)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/table-schema/my-schemas"));
   }

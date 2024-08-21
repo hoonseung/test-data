@@ -1,6 +1,9 @@
 package com.backend.testdata.controller;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -17,18 +20,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.backend.testdata.configuration.SecurityConfiguration;
 import com.backend.testdata.domain.constants.ExportFileType;
 import com.backend.testdata.domain.constants.MockDataType;
+import com.backend.testdata.dto.TableSchemaDto;
 import com.backend.testdata.dto.request.TableSchemaExportRequest;
 import com.backend.testdata.dto.security.GithubUser;
+import com.backend.testdata.service.TableSchemaService;
 import com.backend.testdata.util.FormDataEncoder;
 import com.backend.testdata.util.SchemaFieldRequestWithMock;
 import com.backend.testdata.util.TableSchemaRequestWithMock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -37,12 +44,18 @@ import org.springframework.test.web.servlet.MockMvc;
 @DisplayName("[Controller] 테이블 스키마")
 @Import({SecurityConfiguration.class, FormDataEncoder.class})
 @AutoConfigureMockMvc
-@WebMvcTest
-record TableSchemaControllerTest(
-    @Autowired MockMvc mvc,
-    @Autowired FormDataEncoder encoder,
-    @Autowired ObjectMapper mapper
-) {
+@WebMvcTest(TableSchemaController.class)
+class TableSchemaControllerTest {
+
+  @Autowired
+  private MockMvc mvc;
+  @Autowired
+  private FormDataEncoder encoder;
+  @Autowired
+  private ObjectMapper mapper;
+  @MockBean
+  private TableSchemaService tableSchemaService;
+
 
   @DisplayName("[GET] 테이블 스키마 페이지를 요청하면 테이블 스키마 뷰 (정상) 를 반환한다.")
   @Test
@@ -57,6 +70,8 @@ record TableSchemaControllerTest(
         .andExpect(model().attributeExists("mockDataTypes"))
         .andExpect(model().attributeExists("fileTypes"))
         .andExpect(view().name("table-schema"));
+
+    then(tableSchemaService).shouldHaveNoInteractions();
   }
 
   @DisplayName("[GET] 인증 사용자 스키마 테이블 목록에서 스키마 이름을 누르면 테이블 스키마 뷰 (정상) 를 반환한다.")
@@ -65,6 +80,9 @@ record TableSchemaControllerTest(
     //given
     var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
     var schemaName = "test_schema";
+    given(tableSchemaService.loadMyTableSchema(githubUser.id(), schemaName)).willReturn(
+        TableSchemaDto.of(schemaName, githubUser.id(), null, Set.of()));
+
     //when & then
     mvc.perform(get("/table-schema").queryParam("schemaName", schemaName)
             .with(oauth2Login().oauth2User(githubUser)))
@@ -106,13 +124,17 @@ record TableSchemaControllerTest(
   void whenAuthUserEnteredAllTableSchemaPage_ThenShowAllTableSchemaView() throws Exception {
     //given
     var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
-    //when & then
+    //when
+    given(tableSchemaService.loadTableSchemas("test_id")).willReturn(List.of());
     mvc.perform(get("/table-schema/my-schemas")
             .with(oauth2Login().oauth2User(githubUser)))
         .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
         .andExpect(status().isOk())
-        .andExpect(model().attributeExists("tableSchemas"))
+        .andExpect(model().attribute("tableSchemas", List.of()))
         .andExpect(view().name("my-schemas"));
+
+    // then
+    then(tableSchemaService).should().loadTableSchemas("test_id");
   }
 
 
@@ -124,6 +146,8 @@ record TableSchemaControllerTest(
     mvc.perform(get("/table-schema/my-schemas"))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrlPattern("**/oauth2/authorization/github"));
+
+    then(tableSchemaService).shouldHaveNoInteractions();
   }
 
 

@@ -12,7 +12,6 @@ import com.backend.testdata.dto.security.GithubUser;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -20,8 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @DisplayName("[Controller] 회원")
 @Import(SecurityConfiguration.class)
-@AutoConfigureMockMvc
-@WebMvcTest
+@WebMvcTest(UserAccountController.class)
 public record UserAccountControllerTest(
     @Autowired MockMvc mvc
 ) {

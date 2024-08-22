@@ -38,8 +38,11 @@ public class TableSchemaService {
   }
 
   @Transactional
-  public void saveMySchema(TableSchemaDto tableSchemaDto) {
-    tableSchemaEntityRepository.save(tableSchemaDto.createEntity());
+  public void upsertMySchema(TableSchemaDto tableSchemaDto) {
+    tableSchemaEntityRepository.findByUserIdAndSchemaName(tableSchemaDto.userId(),
+            tableSchemaDto.schemaName())
+        .ifPresentOrElse(tableSchemaDto::updateEntity,
+            () -> tableSchemaEntityRepository.save(tableSchemaDto.createEntity()));
   }
 
 

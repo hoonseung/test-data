@@ -28,88 +28,88 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+
 @RequiredArgsConstructor
 @RequestMapping("/table-schema")
 @Controller
 public class TableSchemaController {
 
-  private final TableSchemaService tableSchemaService;
-  private final ObjectMapper mapper;
+    private final TableSchemaService tableSchemaService;
+    private final ObjectMapper mapper;
 
 
-  @GetMapping
-  public String tableSchema(@RequestParam(name = "schemaName", required = false) String schemaName,
-      @AuthenticationPrincipal GithubUser githubUser,
-      @ModelAttribute TableSchemaRequest tableSchemaRequest, Model model) {
+    @GetMapping
+    public String tableSchema(
+        @RequestParam(name = "schemaName", required = false) String schemaName,
+        @AuthenticationPrincipal GithubUser githubUser, Model model) {
 
-    TableSchemaResponse tableSchema =
-        (Objects.nonNull(githubUser) && StringUtils.hasText(githubUser.id())
-            && StringUtils.hasText(schemaName))
-            ? TableSchemaResponse.toResponse(
-            tableSchemaService.loadMyTableSchema(githubUser.id(), schemaName))
-            : defaultTableSchema(schemaName);
+        TableSchemaResponse tableSchema =
+            (Objects.nonNull(githubUser) && StringUtils.hasText(githubUser.id())
+                && StringUtils.hasText(schemaName)) ? TableSchemaResponse.toResponse(
+                tableSchemaService.loadMyTableSchema(githubUser.id(), schemaName))
+                : defaultTableSchema(schemaName);
 
-    model.addAttribute("tableSchema", tableSchema);
-    model.addAttribute("mockDataTypes", MockDataType.toObjects());
-    model.addAttribute("fileTypes", ExportFileType.toObjects());
+        model.addAttribute("tableSchema", tableSchema);
+        model.addAttribute("mockDataTypes", MockDataType.toObjects());
+        model.addAttribute("fileTypes", ExportFileType.toObjects());
 
-    return "table-schema";
-  }
-
-
-  @PostMapping
-  public String createOrUpdateTableSchema(@AuthenticationPrincipal GithubUser githubUser,
-      @ModelAttribute TableSchemaRequest tableSchemaRequest,
-      RedirectAttributes redirectAttributes) {
-    tableSchemaService.saveMySchema(tableSchemaRequest.toDto(githubUser.id()));
-
-    redirectAttributes.addFlashAttribute("tableSchemaRequest", tableSchemaRequest);
-
-    return "redirect:/table-schema";
-  }
-
-
-  @GetMapping("/my-schemas")
-  public String mySchemas(@AuthenticationPrincipal GithubUser githubUser, Model model) {
-    List<SimpleTableSchemaResponse> tableSchemas = tableSchemaService.loadTableSchemas(
-            githubUser.id())
-        .stream().map(SimpleTableSchemaResponse::toSimpleResponse).toList();
-    model.addAttribute("tableSchemas", tableSchemas);
-
-    return "my-schemas";
-  }
-
-
-  @PostMapping("/my-schemas/{schemaName}")
-  public String deleteMySchema(@PathVariable(name = "schemaName") String schemaName,
-      RedirectAttributes redirectAttributes) {
-
-    return "redirect:/table-schema/my-schemas";
-  }
-
-
-  @GetMapping("/export")
-  public ResponseEntity<String> exportTableSchema(
-      @ModelAttribute TableSchemaExportRequest tableSchemaExportRequest) {
-
-    return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=table-schema.txt")
-        .body(json(tableSchemaExportRequest));
-  }
-
-
-  private TableSchemaResponse defaultTableSchema(String schemaName) {
-    return new TableSchemaResponse(schemaName != null ? schemaName : "schema_name", "shlee",
-        List.of(new SchemaFieldResponse("id", MockDataType.STRING, 1, 0, null, null),
-            new SchemaFieldResponse("order", MockDataType.NUMBER, 2, 0, null, null),
-            new SchemaFieldResponse("name", MockDataType.NAME, 3, 0, null, null)));
-  }
-
-  private String json(Object obj) {
-    try {
-      return mapper.writeValueAsString(obj);
-    } catch (JsonProcessingException jpe) {
-      throw new RuntimeException(jpe);
+        return "table-schema";
     }
-  }
+
+
+    @PostMapping
+    public String createOrUpdateTableSchema(@AuthenticationPrincipal GithubUser githubUser,
+        @ModelAttribute TableSchemaRequest tableSchemaRequest,
+        RedirectAttributes redirectAttributes) {
+        tableSchemaService.upsertMySchema(tableSchemaRequest.toDto(githubUser.id()));
+
+        redirectAttributes.addAttribute("schemaName", tableSchemaRequest.getSchemaName());
+
+        return "redirect:/table-schema";
+    }
+
+
+    @GetMapping("/my-schemas")
+    public String mySchemas(@AuthenticationPrincipal GithubUser githubUser, Model model) {
+        List<SimpleTableSchemaResponse> tableSchemas = tableSchemaService.loadTableSchemas(
+                githubUser.id())
+            .stream().map(SimpleTableSchemaResponse::toSimpleResponse).toList();
+        model.addAttribute("tableSchemas", tableSchemas);
+
+        return "my-schemas";
+    }
+
+
+    @PostMapping("/my-schemas/{schemaName}")
+    public String deleteMySchema(@PathVariable(name = "schemaName") String schemaName,
+        RedirectAttributes redirectAttributes) {
+
+        return "redirect:/table-schema/my-schemas";
+    }
+
+
+    @GetMapping("/export")
+    public ResponseEntity<String> exportTableSchema(
+        @ModelAttribute TableSchemaExportRequest tableSchemaExportRequest) {
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=table-schema.txt")
+            .body(json(tableSchemaExportRequest));
+    }
+
+
+    private TableSchemaResponse defaultTableSchema(String schemaName) {
+        return new TableSchemaResponse(schemaName != null ? schemaName : "schema_name", "shlee",
+            List.of(new SchemaFieldResponse("id", MockDataType.STRING, 1, 0, null, null),
+                new SchemaFieldResponse("order", MockDataType.NUMBER, 2, 0, null, null),
+                new SchemaFieldResponse("name", MockDataType.NAME, 3, 0, null, null)));
+    }
+
+    private String json(Object obj) {
+        try {
+            return mapper.writeValueAsString(obj);
+        } catch (JsonProcessingException jpe) {
+            throw new RuntimeException(jpe);
+        }
+    }
 }

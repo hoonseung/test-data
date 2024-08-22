@@ -100,18 +100,43 @@ class TableSchemaServiceTest {
   }
 
 
-  @DisplayName("회원의 테이블 스키마 생성 정보가 주어지면 새로운 테이블 스키마를 생성한다.")
+  @DisplayName("존재하지 않는 테이블 스키마 생성 정보가 주어지면 새로운 테이블 스키마를 생성한다.")
   @Test
   void whenCreateTableSchemaRequesting_thenCreateNewTableSchema() {
     //given
     TableSchemaDto tableSchemaDto = TableSchemaDto.of("schema1", "test_id", null, Set.of());
+    given(tableSchemaEntityRepository.findByUserIdAndSchemaName(tableSchemaDto.userId(),
+        tableSchemaDto.schemaName()))
+        .willReturn(Optional.empty());
     given(tableSchemaEntityRepository.save(tableSchemaDto.createEntity())).willReturn(null);
 
     //when
-    sut.saveMySchema(tableSchemaDto);
+    sut.upsertMySchema(tableSchemaDto);
 
     //then
+    then(tableSchemaEntityRepository).should()
+        .findByUserIdAndSchemaName(tableSchemaDto.userId(), tableSchemaDto.schemaName());
     then(tableSchemaEntityRepository).should().save(tableSchemaDto.createEntity());
+  }
+
+
+  @DisplayName("존재하는 테이블 스키마 생성 정보가 주어지면 새로운 테이블 스키마를 생성한다.")
+  @Test
+  void whenUpdateTableSchemaRequesting_thenUpdateTableSchema() {
+    //given
+    TableSchemaDto tableSchema = TableSchemaDto.of("schema1", "test_id", null, Set.of());
+    TableSchemaEntity existTableSchema = TableSchemaEntity.of("schema1", "test_id");
+
+    given(tableSchemaEntityRepository.findByUserIdAndSchemaName(tableSchema.userId(),
+        tableSchema.schemaName()))
+        .willReturn(Optional.of(existTableSchema));
+
+    //when
+    sut.upsertMySchema(tableSchema);
+
+    //then
+    then(tableSchemaEntityRepository).should()
+        .findByUserIdAndSchemaName(tableSchema.userId(), tableSchema.schemaName());
   }
 
 

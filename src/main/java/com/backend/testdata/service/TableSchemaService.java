@@ -37,5 +37,10 @@ public class TableSchemaService {
             () -> new EntityNotFoundException(String.format("해당 스키마를 찾을 수 없습니다. id : %s", userId)));
   }
 
+  @Transactional
+  public void saveMySchema(TableSchemaDto tableSchemaDto) {
+    tableSchemaEntityRepository.save(tableSchemaDto.createEntity());
+  }
+
 
 }

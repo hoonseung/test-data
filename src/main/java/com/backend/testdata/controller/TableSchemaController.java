@@ -11,7 +11,6 @@ import com.backend.testdata.dto.security.GithubUser;
 import com.backend.testdata.service.TableSchemaService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -59,8 +58,10 @@ public class TableSchemaController {
 
 
   @PostMapping
-  public String createOrUpdateTableSchema(@ModelAttribute TableSchemaRequest tableSchemaRequest,
+  public String createOrUpdateTableSchema(@AuthenticationPrincipal GithubUser githubUser,
+      @ModelAttribute TableSchemaRequest tableSchemaRequest,
       RedirectAttributes redirectAttributes) {
+    tableSchemaService.saveMySchema(tableSchemaRequest.toDto(githubUser.id()));
 
     redirectAttributes.addFlashAttribute("tableSchemaRequest", tableSchemaRequest);
 

@@ -162,11 +162,14 @@ class TableSchemaControllerTest {
         //given
         var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
         String schemaName = "schemaName";
+        willDoNothing().given(tableSchemaService).deleteMySchema(githubUser.id(), schemaName);
         //when & then
         mvc.perform(post("/table-schema/my-schemas/{schemaName}", schemaName)
                 .with(csrf()).with(oauth2Login().oauth2User(githubUser)))
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/table-schema/my-schemas"));
+
+        then(tableSchemaService).should().deleteMySchema(githubUser.id(), schemaName);
     }
 
 

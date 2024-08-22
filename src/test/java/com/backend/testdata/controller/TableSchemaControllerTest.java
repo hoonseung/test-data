@@ -3,7 +3,7 @@ package com.backend.testdata.controller;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -101,12 +101,14 @@ class TableSchemaControllerTest {
   void whenCreatedOrUpdatedTableSchema_ThenRedirectionToTableSchemaPage() throws Exception {
     //given
     var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
-    var request = TableSchemaRequestWithMock.create("test_schema", "홍길동",
+    var request = TableSchemaRequestWithMock.create("test_schema",
         List.of(
             SchemaFieldRequestWithMock.create("id", MockDataType.ROW_NUMBER, 1, 0, null, null),
             SchemaFieldRequestWithMock.create("name", MockDataType.NAME, 2, 0, null, null),
             SchemaFieldRequestWithMock.create("age", MockDataType.NUMBER, 3, 0, null, null)
         ));
+
+    willDoNothing().given(tableSchemaService).saveMySchema(request.toDto(githubUser.id()));
 
     //when & then
     mvc.perform(post("/table-schema")
@@ -116,6 +118,8 @@ class TableSchemaControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(flash().attributeExists("tableSchemaRequest"))
         .andExpect(redirectedUrl("/table-schema"));
+
+    then(tableSchemaService).should().saveMySchema(request.toDto(githubUser.id()));
   }
 
 

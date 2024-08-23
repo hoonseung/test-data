@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum MockDataType {
 
-  STRING(Set.of("minLength", "maxLength", "pattern"), null),
+  STRING(Set.of("minLength", "maxLength"), null),
   NUMBER(Set.of("min", "max", "decimal"), null),
   BOOLEAN(Set.of(), null),
   DATETIME(Set.of("from", "to"), null),

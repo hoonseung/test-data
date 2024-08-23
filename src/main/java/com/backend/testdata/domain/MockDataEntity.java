@@ -34,7 +34,7 @@ public class MockDataEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "mock_data_type", nullable = false)
     private MockDataType mockDataType;
-    @Column(name = "mock_data_value", nullable = false)
+    @Column(name = "mock_data_value", length = 1000,nullable = false)
     private String mockDataValue;
 
 

@@ -8,6 +8,7 @@ import com.backend.testdata.dto.response.SchemaFieldResponse;
 import com.backend.testdata.dto.response.SimpleTableSchemaResponse;
 import com.backend.testdata.dto.response.TableSchemaResponse;
 import com.backend.testdata.dto.security.GithubUser;
+import com.backend.testdata.service.SchemaExportService;
 import com.backend.testdata.service.TableSchemaService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +37,7 @@ public class TableSchemaController {
 
     private final TableSchemaService tableSchemaService;
     private final ObjectMapper mapper;
+    private final SchemaExportService schemaExportService;
 
 
     @GetMapping
@@ -91,11 +93,25 @@ public class TableSchemaController {
 
     @GetMapping("/export")
     public ResponseEntity<String> exportTableSchema(
-        @ModelAttribute TableSchemaExportRequest tableSchemaExportRequest) {
+        @AuthenticationPrincipal GithubUser githubUser,
+        @ModelAttribute TableSchemaExportRequest tableSchemaExportRequest)
+    {
+        String fileName = getFilename(tableSchemaExportRequest.getSchemaName(),
+            tableSchemaExportRequest.getFileType());
 
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=table-schema.txt")
-            .body(json(tableSchemaExportRequest));
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
+            .body(schemaExportService.export(tableSchemaExportRequest.getFileType(),
+                tableSchemaExportRequest.toDto(
+                    Objects.nonNull(githubUser) ? githubUser.id() : null
+                ),
+                tableSchemaExportRequest.getRowCount()));
+    }
+
+
+    private String getFilename(String schemaName, ExportFileType fileType) {
+        return schemaName + "."
+            + fileType.name().toLowerCase();
     }
 
 

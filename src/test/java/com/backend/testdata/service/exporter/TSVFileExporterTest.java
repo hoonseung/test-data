@@ -5,15 +5,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.backend.testdata.domain.constants.MockDataType;
 import com.backend.testdata.dto.SchemaFieldDto;
 import com.backend.testdata.dto.TableSchemaDto;
+import com.backend.testdata.service.generator.MockDataGeneratorContext;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @DisplayName("[Logic] TSV 파일 출력기 테스트")
+@ExtendWith(MockitoExtension.class)
 class TSVFileExporterTest {
 
+    @Mock
+    private MockDataGeneratorContext mockDataGeneratorContext;
 
-    private DelimiterBasedFileExporter sut = new TSVFileExporter();
+    @InjectMocks
+    private TSVFileExporter sut;
 
 
     @DisplayName("테이블 스키마와 행수가 주어지면 CSV 형식의 문자열을 생성한다.")

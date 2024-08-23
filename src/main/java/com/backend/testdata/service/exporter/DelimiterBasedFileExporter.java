@@ -2,13 +2,18 @@ package com.backend.testdata.service.exporter;
 
 import com.backend.testdata.dto.SchemaFieldDto;
 import com.backend.testdata.dto.TableSchemaDto;
+import com.backend.testdata.service.generator.MockDataGeneratorContext;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import lombok.RequiredArgsConstructor;
 
 
+@RequiredArgsConstructor
 public abstract class DelimiterBasedFileExporter implements MockDataFileExporter {
+
+    private final MockDataGeneratorContext mockDataGeneratorContext;
 
 
     @Override
@@ -29,7 +34,13 @@ public abstract class DelimiterBasedFileExporter implements MockDataFileExporter
             .forEachOrdered(i -> {
                 sb.append(dto.schemaFields().stream()
                     .sorted(Comparator.comparing(SchemaFieldDto::fieldOrder))
-                    .map(field -> "가짜 데이터") //TODO 구현필요
+                    .map(field -> mockDataGeneratorContext.delegatingGenerate(
+                            field.mockDataType(),
+                            field.blankPercent(),
+                            field.typeOptionJson(),
+                            field.forceValue()
+                        )
+                    )
                     .map(value -> Objects.isNull(value) ? "" : value)
                     .collect(Collectors.joining(delimiter))
                 );

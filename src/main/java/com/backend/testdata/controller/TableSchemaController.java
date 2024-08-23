@@ -122,11 +122,5 @@ public class TableSchemaController {
                 new SchemaFieldResponse("name", MockDataType.NAME, 3, 0, null, null)));
     }
 
-    private String json(Object obj) {
-        try {
-            return mapper.writeValueAsString(obj);
-        } catch (JsonProcessingException jpe) {
-            throw new RuntimeException(jpe);
-        }
-    }
+
 }

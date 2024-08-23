@@ -31,10 +31,7 @@ class MockDataFileExporterContextTest {
             null,
             Set.of(
                 SchemaFieldDto.of("id", MockDataType.STRING, 1, 0, null, null),
-                SchemaFieldDto.of("name", MockDataType.NAME, 2, 0, null, null),
-                SchemaFieldDto.of("age", MockDataType.NUMBER, 3, 0, null, null),
-                SchemaFieldDto.of("car", MockDataType.CAR, 4, 0, null, null),
-                SchemaFieldDto.of("created_at", MockDataType.DATETIME, 5, 0, null, null)
+                SchemaFieldDto.of("name", MockDataType.STRING, 2, 0, null, null)
             )
         );
         int rowCount = 10;

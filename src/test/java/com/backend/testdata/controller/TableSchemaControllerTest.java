@@ -23,6 +23,7 @@ import com.backend.testdata.domain.constants.MockDataType;
 import com.backend.testdata.dto.TableSchemaDto;
 import com.backend.testdata.dto.request.TableSchemaExportRequest;
 import com.backend.testdata.dto.security.GithubUser;
+import com.backend.testdata.service.SchemaExportService;
 import com.backend.testdata.service.TableSchemaService;
 import com.backend.testdata.util.FormDataEncoder;
 import com.backend.testdata.util.SchemaFieldRequestWithMock;
@@ -55,6 +56,8 @@ class TableSchemaControllerTest {
     private ObjectMapper mapper;
     @MockBean
     private TableSchemaService tableSchemaService;
+    @MockBean
+    private SchemaExportService schemaExportService;
 
 
     @DisplayName("[GET] 테이블 스키마 페이지를 요청하면 테이블 스키마 뷰 (정상) 를 반환한다.")
@@ -173,24 +176,66 @@ class TableSchemaControllerTest {
     }
 
 
-    @DisplayName("[GET] 테이블 스키마 파일 다운로드 (정상) 후 파일을 반환한다.")
+    @DisplayName("[GET] [비로그인] 테이블 스키마 파일 다운로드 (정상) 후 파일을 반환한다.")
     @Test
-    void whenTableSchemaDownLoading_ThenReturnResultFile() throws Exception {
+    void whenUnAuthUserIsTableSchemaDownLoading_ThenReturnResultFile() throws Exception {
         //given
-        var request = TableSchemaExportRequest.of("test", 60, ExportFileType.JSON,
+        var request = TableSchemaExportRequest.of("test", 60, ExportFileType.CSV,
             List.of(
                 SchemaFieldRequestWithMock.create("id", MockDataType.ROW_NUMBER, 1, 0, null, null),
                 SchemaFieldRequestWithMock.create("name", MockDataType.NAME, 2, 0, null, null),
                 SchemaFieldRequestWithMock.create("age", MockDataType.NUMBER, 3, 0, null, null)
             ));
         var queryParam = encoder.encode(request, false);
+        var expectedBody = "id, name. age, createdAt";
+        var fileName = request.getSchemaName() + "." + request.getFileType().name().toLowerCase();
+
+        given(schemaExportService.export(request.getFileType(), request.toDto(null),
+            request.getRowCount()))
+            .willReturn(expectedBody);
 
         //when & then
         mvc.perform(get("/table-schema/export?" + queryParam))
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
             .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=table-schema.txt"))
-            .andExpect(content().json(mapper.writeValueAsString(request))); // TODO 수정 필요
+                "attachment; filename=" + fileName))
+            .andExpect(content().string(expectedBody));
+
+        then(schemaExportService).should()
+            .export(request.getFileType(), request.toDto(null), request.getRowCount());
+    }
+
+
+    @DisplayName("[GET] [로그인] 테이블 스키마 파일 다운로드 (정상) 후 파일을 반환한다.")
+    @Test
+    void whenAuthUserIsTableSchemaDownLoading_ThenReturnResultFile() throws Exception {
+        //given
+        var githubUser = new GithubUser("test_id", "test_name", "test@email.com");
+        var request = TableSchemaExportRequest.of("test", 60, ExportFileType.CSV,
+            List.of(
+                SchemaFieldRequestWithMock.create("id", MockDataType.ROW_NUMBER, 1, 0, null, null),
+                SchemaFieldRequestWithMock.create("name", MockDataType.NAME, 2, 0, null, null),
+                SchemaFieldRequestWithMock.create("age", MockDataType.NUMBER, 3, 0, null, null)
+            ));
+        var queryParam = encoder.encode(request, false);
+        var expectedBody = "id, name. age, createdAt";
+        var fileName = request.getSchemaName() + "." + request.getFileType().name().toLowerCase();
+
+        given(schemaExportService.export(request.getFileType(), request.toDto(githubUser.id()),
+            request.getRowCount()))
+            .willReturn(expectedBody);
+
+        //when & then
+        mvc.perform(get("/table-schema/export?" + queryParam)
+                .with(oauth2Login().oauth2User(githubUser)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
+            .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=" + fileName))
+            .andExpect(content().string(expectedBody));
+
+        then(schemaExportService).should()
+            .export(request.getFileType(), request.toDto(githubUser.id()), request.getRowCount());
     }
 }
